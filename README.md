@@ -6,7 +6,7 @@ A board game about lines: yours has to reach the monster's castle, and it only
 counts as long as it still touches your own. Eight boards make a night. Win all
 eight and you have won the game — that is the whole of it, there is no ninth.
 
-![Unicorn vs Nightmares gameplay](media/gameplay-desktop.gif)
+![Screenshot](media/cover.png)
 
 *A real game, played by the game's own AI on both sides, recorded by
 `scripts/record-gif.mjs`. The exact command is in
@@ -15,6 +15,9 @@ eight and you have won the game — that is the whole of it, there is no ninth.
 The whole thing is one HTML file under 13 kB, zipped. No images, no audio files,
 no libraries. Every unicorn, every monster and all eight boards are drawn with
 canvas paths, and every sound is generated with the Web Audio API.
+
+![Unicorn vs Nightmares gameplay](media/gameplay-desktop.gif)
+
 
 The design is by Raphael, a kid who makes games with his dad and with Claude
 Code. He wanted one where a unicorn protects a child's dream from the nightmare
