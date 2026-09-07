@@ -1,0 +1,94 @@
+{
+  "achievements": [
+    {
+      "identifier": "FIRST_DREAM",
+      "display_name": "First Dream",
+      "description": "Win the first board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "DRIFTING_OFF",
+      "display_name": "Drifting Off",
+      "description": "Win the second board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "DEEP_SLEEPER",
+      "display_name": "Deep Sleeper",
+      "description": "Win the third board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "MIDNIGHT_HOUR",
+      "display_name": "Midnight Hour",
+      "description": "Win the fourth board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "LUCID_DREAMER",
+      "display_name": "Lucid Dreamer",
+      "description": "Win the fifth board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "NIGHT_WATCH",
+      "display_name": "Night Watch",
+      "description": "Win the sixth board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "DAWN_CHASER",
+      "display_name": "Dawn Chaser",
+      "description": "Win the seventh board of the night.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "DREAM_MASTER",
+      "display_name": "Dream Master",
+      "description": "Win the eighth and last board: all 8 dreams saved, the night is yours.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "CASTLE_RAID",
+      "display_name": "Castle Raid",
+      "description": "Win a board by reaching the nightmare monster's castle.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "STAR_KEEPER",
+      "display_name": "Star Keeper",
+      "description": "Win a board by holding your stars through a whole enemy turn.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "PINK_VICTORY",
+      "display_name": "Pink Victory",
+      "description": "Take the monster's castle with the pink unicorn, the weakest tile of all.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "QUICK_DREAM",
+      "display_name": "Quick Dream",
+      "description": "Win a board in under 12 moves.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "SWIFT_DREAMER",
+      "display_name": "Swift Dreamer",
+      "description": "Win a board in under 13 seconds.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "STAR_THIEF",
+      "display_name": "Star Thief",
+      "description": "Steal three stars from the monster with a single tile.",
+      "stat_requirement": null
+    },
+    {
+      "identifier": "NEVER_WAKING",
+      "display_name": "Never Waking",
+      "description": "Finish the whole night with 4500 points or more.",
+      "stat_requirement": null
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Labo d'entraînement - Unicorn vs Nightmares</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#12102a;color:#efe4f6;font:14px/1.45 system-ui,sans-serif;padding:16px 14px 50px}
+h1{font-size:21px;margin:0 0 2px}
+.sous{color:#b8a8d8;font-size:13px;margin:0 0 14px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.bar label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#b8a8d8}
+.bar input,.bar select{font:inherit;width:96px;padding:5px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#1b1740;color:#fff}
+.bar select{width:130px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:8px 14px;background:#7a52c9;color:#fff;font-weight:700}
+button.sec{background:rgba(255,255,255,.14)}
+button:disabled{opacity:.4;cursor:default}
+.prog{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:6px 0 14px;font-size:13px;color:#d8ccee}
+.jauge{flex:1;min-width:200px;height:12px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden}
+.jauge i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9ec4,#ffe98a);transition:width .2s}
+.grille{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
+.carte{background:rgba(255,255,255,.06);border-radius:14px;padding:12px 14px}
+.carte h2{font-size:14px;margin:0 0 8px;color:#ffe98a;font-weight:700}
+canvas{width:100%;height:240px;display:block;background:rgba(0,0,0,.25);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.08)}
+th{color:#b8a8d8;font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+textarea{width:100%;height:220px;font:12px/1.4 ui-monospace,monospace;background:#0c0a1e;color:#cfe7c5;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+.stat b{display:block;font-size:20px;color:#fff}
+.note{color:#9a8cc0;font-size:12px;margin-top:8px;line-height:1.5}
+.up{color:#9ef0b6}.down{color:#ff9e9e}
+.expl{margin-top:16px;color:#b8a8d8;font-size:13px;line-height:1.6;max-width:900px}
+</style></head><body>
+<div id="boot" style="background:#5a2333;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;line-height:1.5">
+Chargement du labo... <b>Si ce message reste affiché</b>, le fichier est ouvert dans un aperçu qui n'exécute pas JavaScript
+(l'aperçu Fichiers de l'iPhone, par exemple). Ouvre-le dans un vrai navigateur : Partager, puis Ouvrir dans Safari ou Chrome.
+</div>
+<h1>Labo d'entraînement</h1>
+<p class="sous">Trois IA jouent au vrai moteur du jeu, dans un fil séparé : l'aléatoire, l'actuelle (le code du jeu, tel quel), et une apprenante dont les poids évoluent par algorithme génétique. Rien de ceci ne touche au jeu.</p>
+
+<div class="bar">
+  <label>Méthode<select id="algo"><option value="coord">Par critère (recommandée)</option><option value="ga">Génétique</option></select></label>
+  <label>Préréglage<select id="preset"><option value="">choisir...</option>
+    <option value="rapide">Rapide : 1 passe légère, ~40 s</option>
+    <option value="serieux">Sérieux : 1 passe à 500 parties, ~2 min</option>
+    <option value="long">Long : 2 passes à 800 parties, ~6 min</option>
+    <option value="ga10">Génétique : 10 générations, ~40 s</option>
+    <option value="ga60">Génétique long : 30 générations, ~4 min</option></select></label>
+  <label class="mCo">Passes sur les 15 critères<input id="passes" type="number" value="1" min="1" max="6"></label>
+  <label class="mCo">Parties par candidat<input id="perCand" type="number" value="500" min="20" step="20"></label>
+  <label class="mGa">Générations<input id="gens" type="number" value="10" min="1" max="200"></label>
+  <label class="mGa">Population<input id="pop" type="number" value="10" min="4" max="40"></label>
+  <label class="mGa">Parties par individu et par génération<input id="perInd" type="number" value="100" min="20" step="20"></label>
+  <label class="mGa">Élites gardées<input id="el" type="number" value="3" min="1" max="10"></label>
+  <label class="mGa">Mutation σ<input id="sig" type="number" value="0.25" min="0.02" max="1" step="0.05"></label>
+  <label class="mGa">Poids de "battre l'actuelle"<input id="al" type="number" value="0.8" min="0" max="1" step="0.1"></label>
+  <label>Niveau (paquet du monstre)<select id="niv"><option value="0">tous, à tour de rôle</option><option value="1">1 (début de série)</option><option value="3">3</option><option value="5">5 (paquet complet)</option><option value="8">8</option><option value="11">11 (fin de série)</option></select></label>
+  <label>Bruit de l'apprenante<select id="nz"><option value="-1">même que le jeu</option><option value="0">aucun</option><option value="5">5</option><option value="15">15</option><option value="30">30</option></select></label>
+  <span id="total" style="align-self:center;font-weight:700;color:#ffe98a"></span>
+  <button id="go">Démarrer</button>
+  <button id="pause" class="sec" disabled>Pause</button>
+  <button id="reset" class="sec">Réinitialiser</button>
+  <button id="verif" class="sec" disabled>Vérifier le champion (600 parties)</button>
+  <button id="exp" class="sec" disabled>Exporter le JSON</button>
+</div>
+
+<div class="prog">
+  <span id="etat">Prêt. Mesure des repères en cours...</span>
+  <div class="jauge"><i id="jauge"></i></div>
+  <span id="compte">0 / 10 000</span>
+  <span id="vit"></span>
+</div>
+
+<div class="grille">
+  <div class="carte"><h2 id="t1">Convergence : taux de victoire du champion par génération</h2>
+    <canvas id="c1"></canvas>
+    <div class="note" id="leg1"></div></div>
+  <div class="carte"><h2>Évolution des poids du champion (log₂ du rapport à l'origine)</h2>
+    <canvas id="c2"></canvas>
+    <div class="note">Une ligne à 0 = poids inchangé. +1 = doublé, −1 = divisé par deux. La ligne <b>cutStars</b> est un critère <b>nouveau</b>, à 0 dans l'IA actuelle : elle compte les étoiles adverses débranchées par un coup.</div></div>
+  <div class="carte"><h2>Le champion</h2>
+    <div class="stat">
+      <div>génération<b id="sGen">0</b></div>
+      <div>parties jouées<b id="sPlayed">0</b></div>
+      <div>vs actuelle<b id="sCur">–</b></div>
+      <div>vs aléatoire<b id="sRnd">–</b></div>
+      <div>parties du champion<b id="sG">–</b></div>
+      <div>temps<b id="sT">0 s</b></div>
+    </div>
+    <div class="note" id="verifOut"></div>
+    <table id="tw"><thead><tr><th></th><th>poids</th><th>rôle</th><th style="text-align:right">origine</th><th style="text-align:right">champion</th><th style="text-align:right">×</th></tr></thead><tbody></tbody></table></div>
+  <div class="carte"><h2 id="t4">Population de la génération en cours</h2>
+    <table id="tp"><thead><tr><th>#</th><th style="text-align:right">score</th><th style="text-align:right">borne basse</th><th style="text-align:right">vs actuelle</th><th style="text-align:right">parties</th><th style="text-align:right">née gén.</th></tr></thead><tbody></tbody></table>
+    <div class="note">Le score = α × (vs actuelle) + (1−α) × (vs aléatoire). <b>Le classement se fait sur la borne basse</b> : le score moins une marge d'autant plus grande que l'individu a peu joué. Sans ça, le "champion" est presque toujours un nouveau-né chanceux : avec 100 parties, l'écart-type est de ±7 points, et prendre le meilleur de dix mesures bruitées sélectionne la chance. Les élites gardent leurs parties d'une génération à l'autre, et tous les individus d'une génération jouent exactement les mêmes paquets et plateaux.</div></div>
+  <div class="carte"><h2>JSON des meilleurs poids</h2>
+    <textarea id="json" readonly>Lance un entraînement, puis "Exporter le JSON".</textarea>
+    <div style="margin-top:8px;display:flex;gap:8px"><button id="copy" class="sec">Copier</button><button id="dl" class="sec">Télécharger</button></div></div>
+</div>
+
+<div class="expl">
+<b>Comment ça apprend.</b> L'IA actuelle note chaque coup possible avec 14 poids fixes et joue le meilleur. L'apprenante utilise la même notation, mais ses 15 poids (les 14 plus <i>cutStars</i>) sont un génome. Une population de génomes joue chacun le même nombre de parties, moitié contre l'IA actuelle, moitié contre l'aléatoire, une fois sur deux du côté du monstre. À chaque génération, les meilleurs sont gardés tels quels, les autres sont remplacés par des croisements des meilleurs, mutés : chaque poids est multiplié par un facteur aléatoire autour de 1, et parfois décalé. Les élites survivantes continuent d'accumuler des parties, ce qui rend leur mesure plus précise et empêche un chanceux de rester champion. Par défaut l'apprenante a <b>le même bruit que le jeu</b> : tout gain vient donc des poids, pas d'une IA qui hésite moins.
+<br><br><b>La méthode par critère</b> (recommandée) ne fait pas de population : elle part des poids du jeu, et pour chaque critère elle essaie 4 valeurs (×0, ×½, ×1, ×2, ou 0/10/30/100 s'il vaut zéro), chacune sur le même lot de parties contre l'IA actuelle. Elle garde la meilleure si elle bat la valeur en place d'au moins 1 point, puis passe au critère suivant. Le total découle des facteurs : passes × 15 critères × 4 candidats × parties par candidat. C'est cette méthode qui a trouvé que le critère <i>holdGate</i> (occuper sa propre porte) <b>fait perdre 5 points</b>, ce que le génétique n'a pas vu en 36 000 parties.
+<br><br><b>Le niveau compte.</b> Le paquet du monstre change d'un tableau à l'autre : au tableau 1 il n'a ni violet ni rouge, au 5 son paquet est complet. Des poids appris sur un seul niveau <b>ne s'y transposent pas</b> : une session entraînée au niveau 5 a donné 53% au niveau 5 mais 47% au niveau 3. Laisse "tous, à tour de rôle" sauf si tu veux régler un tableau précis.
+<br><br><b>Ce qu'il faut savoir avant de lire les courbes.</b> L'IA actuelle est déjà réglée : la battre de 5 points est difficile, et 5 points, c'est moins que le bruit d'une mesure sur 100 parties. En génétique, le total = générations × population × parties par individu. Avec 10 000 parties, le champion affiché monte souvent à 60-70% puis <b>redescend vers 50% à mesure qu'il joue</b> : c'est le bruit qui s'efface, pas l'IA qui régresse. Le seul chiffre à croire est celui du bouton <b>Vérifier</b>, mesuré sur des parties fraîches. Pour un vrai gain, compte plutôt 60 000 parties et plus.
+</div>
+
+<script id="game" type="text/plain">__GAME__</script>
+<script id="core" type="text/plain">__CORE__</script>
+<script>
+"use strict";
+// ---------- le worker : moteur du jeu + coeur du labo, sans ecran ----------
+var prelude = [
+ "var noop=function(){};",
+ "var ctxStub=new Proxy({createLinearGradient:function(){return{addColorStop:noop}},createRadialGradient:function(){return{addColorStop:noop}},measureText:function(){return{width:10}},getTransform:function(){return{a:1,b:0,c:0,d:1,e:0,f:0}}},{get:function(t,k){return k in t?t[k]:noop},set:function(){return true}});",
+ "self.window=self; self.innerWidth=390; self.innerHeight=844; self.devicePixelRatio=1; self.navigator={};",
+ "self.document={getElementById:function(){return{getContext:function(){return ctxStub},style:{},addEventListener:noop}}};",
+ "self.requestAnimationFrame=noop;"
+].join("\n");
+var src = prelude + "\n" + document.getElementById('game').textContent + "\n" + document.getElementById('core').textContent;
+
+// Le meme code peut tourner dans la page si le Worker est refuse : les noms de
+// l'environnement (document, window...) sont passes en parametres, donc le code
+// du jeu voit nos bouchons et jamais la vraie page. Math est un clone pour que
+// le generateur seede du labo ne touche pas celui de la page.
+function FauxWorker(code){
+  var me=this, fake={};
+  fake.self=fake; fake.window=fake; fake.innerWidth=390; fake.innerHeight=844; fake.devicePixelRatio=1;
+  fake.navigator={}; fake.requestAnimationFrame=function(){};
+  var ctxStub=new Proxy({createLinearGradient:function(){return{addColorStop:function(){}}},createRadialGradient:function(){return{addColorStop:function(){}}},measureText:function(){return{width:10}},getTransform:function(){return{a:1,b:0,c:0,d:1,e:0,f:0}}},{get:function(t,k){return k in t?t[k]:function(){}},set:function(){return true}});
+  fake.document={getElementById:function(){return{getContext:function(){return ctxStub},style:{},addEventListener:function(){}}}};
+  fake.postMessage=function(m){ setTimeout(function(){ if(me.onmessage) me.onmessage({data:m}); },0); };
+  var MathShim=Object.create(Math);
+  var st=function(f,t){ return setTimeout(f,t); }, ct=function(id){ return clearTimeout(id); };
+  new Function('self','window','globalThis','document','Math','setTimeout','clearTimeout',
+      'innerWidth','innerHeight','devicePixelRatio','requestAnimationFrame','navigator','addEventListener','postMessage',code)
+    .call(fake,fake,fake,fake,fake.document,MathShim,st,ct,390,844,1,fake.requestAnimationFrame,fake.navigator,function(){},fake.postMessage);
+  me.postMessage=function(m){ if(fake.onmessage) fake.onmessage({data:m}); };
+  me.terminate=function(){};
+}
+
+var worker=null, moteur='', bootT=0;
+function surMessage(e){ recoit(e.data); }
+function lance(usine, nom, suite){
+  try{ worker=usine(); }
+  catch(err){
+    if(suite) suite(err);
+    else $('etat').textContent='Impossible de demarrer le moteur de secours : '+(err&&err.message||err);
+    return;
+  }
+  moteur=nom;
+  // la minuterie AVANT l'ecouteur : si "ready" arrive pendant le branchement,
+  // c'est bien elle qu'il annule, pas une minuterie perimee
+  clearTimeout(bootT);
+  bootT=setTimeout(function(){
+    if(suite){ var f=suite; suite=null;
+      $('etat').textContent='Le moteur ne repond pas ; passage au mode secours.';
+      try{worker.terminate();}catch(e2){} f(); }
+    else $('etat').textContent='Le moteur de secours ne repond pas. Dis-le a Claude avec le nom de ton navigateur.';
+  }, 2500);
+  worker.onmessage=function(e){ suite=null; surMessage(e); };
+  worker.onerror=function(err){
+    if(suite){ var f=suite; suite=null;
+      $('etat').textContent='Erreur du fil separe ('+(err&&err.message||'inconnue')+') ; passage au mode secours.';
+      try{worker.terminate();}catch(e2){} f(); }
+    else $('etat').textContent='Erreur du moteur de secours : '+(err&&err.message||err);
+  };
+}
+function demarreMoteur(){
+  lance(function(){ return new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'}))); },
+    'fil séparé',
+    function(){ lance(function(){ return new FauxWorker(src); }, 'dans la page (secours)', null); });
+}
+var $ = function(id){ return document.getElementById(id); };
+var hist = [], coHist = [], chk = [], base = null, running = false, elapsed = 0, lastTick = 0, lastProg = null, rate = 0, names = [], w0 = [], desc = {}, champion = null;
+var COL = function(k){ return 'hsl(' + (k * 24) + ',85%,68%)'; };
+
+function cfg(){
+  var ga = $('algo').value === 'ga';
+  if (ga) {
+    var P = +$('pop').value, G = +$('perInd').value, N = +$('gens').value;
+    return { algo: 'ga', pop: P, gamesPerGen: P * G, elites: Math.min(+$('el').value, P - 1),
+             sigma: +$('sig').value, alpha: +$('al').value, niv: +$('niv').value, noise: +$('nz').value, target: N * P * G };
+  }
+  var C = +$('perCand').value, S = +$('passes').value;
+  return { algo: 'coord', pop: 10, gamesPerGen: 4 * C, elites: 3, sigma: 0.25, alpha: 1,
+           niv: +$('niv').value, noise: +$('nz').value, target: S * 15 * 4 * C };
+}
+function majMode(){
+  var ga = $('algo').value === 'ga';
+  document.querySelectorAll('.mGa').forEach(function(l){ l.style.display = ga ? '' : 'none'; });
+  document.querySelectorAll('.mCo').forEach(function(l){ l.style.display = ga ? 'none' : ''; });
+  majTotal();
+}
+function majTotal(){
+  var c = cfg(), ga = c.algo === 'ga';
+  var detail = ga
+    ? $('gens').value + ' générations × ' + $('pop').value + ' individus × ' + $('perInd').value + ' parties'
+    : $('passes').value + ' passe(s) × 15 critères × 4 candidats × ' + $('perCand').value + ' parties';
+  var sec = Math.round(c.target / (rate || 260));
+  $('total').innerHTML = detail + ' = <b>' + fmtN(c.target) + '</b> parties' + (ga ? ' (+ vérifications)' : '') + ', ~' + (sec > 90 ? Math.round(sec / 60) + ' min' : sec + ' s');
+  $('compte').textContent = '0 / ' + fmtN(c.target);
+}
+function fmtN(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+function pct(x){ return (x * 100).toFixed(1) + '%'; }
+
+// ---------- courbes ----------
+function chart(cv, series, o){
+  var dpr = window.devicePixelRatio || 1, Wc = cv.clientWidth, Hc = cv.clientHeight;
+  if (cv.width !== Wc * dpr) { cv.width = Wc * dpr; cv.height = Hc * dpr; }
+  var x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, Wc, Hc);
+  var L = 44, R = o.right || 14, T = 12, B = 26, pw = Wc - L - R, ph = Hc - T - B;
+  var xs = [], ys = [];
+  series.forEach(function(s){ s.pts.forEach(function(p){ xs.push(p[0]); ys.push(p[1]); if (p[2] !== undefined) ys.push(p[2]); }); });
+  var xmin = 0, xmax = Math.max(1, Math.max.apply(null, xs.concat([o.xmax || 1])));
+  var ymin = o.ymin !== undefined ? o.ymin : Math.min.apply(null, ys), ymax = o.ymax !== undefined ? o.ymax : Math.max.apply(null, ys);
+  if (!isFinite(ymin)) { ymin = 0; ymax = 1; }
+  if (ymax - ymin < 1e-6) { ymax = ymin + 1; }
+  var px = function(v){ return L + (v - xmin) / (xmax - xmin) * pw; }, py = function(v){ return T + (1 - (v - ymin) / (ymax - ymin)) * ph; };
+  x.strokeStyle = 'rgba(255,255,255,.12)'; x.fillStyle = '#9a8cc0'; x.font = '11px system-ui'; x.textAlign = 'right'; x.textBaseline = 'middle';
+  var ny = 5, k;
+  for (k = 0; k <= ny; k++) { var yv = ymin + (ymax - ymin) * k / ny, yy = py(yv);
+    x.beginPath(); x.moveTo(L, yy); x.lineTo(L + pw, yy); x.stroke(); x.fillText(o.yfmt ? o.yfmt(yv) : yv.toFixed(1), L - 6, yy); }
+  x.textAlign = 'center'; x.textBaseline = 'top';
+  var step = Math.max(1, Math.ceil(xmax / 10));
+  for (k = 0; k <= xmax; k += step) x.fillText(String(k), px(k), T + ph + 6);
+  x.fillText(o.xlabel || 'génération', L + pw / 2, T + ph + 14);
+  series.forEach(function(s){
+    if (!s.pts.length) return;
+    if (s.band) { x.fillStyle = s.color; x.globalAlpha = 0.16; x.beginPath();
+      s.pts.forEach(function(p, i){ x[i ? 'lineTo' : 'moveTo'](px(p[0]), py(p[1])); });
+      s.pts.slice().reverse().forEach(function(p){ x.lineTo(px(p[0]), py(p[2])); });
+      x.closePath(); x.fill(); x.globalAlpha = 1; return; }
+    x.strokeStyle = s.color; x.lineWidth = s.w || 2; x.setLineDash(s.dash || []); x.beginPath();
+    s.pts.forEach(function(p, i){ x[i ? 'lineTo' : 'moveTo'](px(p[0]), py(p[1])); });
+    x.stroke(); x.setLineDash([]);
+    if (s.label) { var lp = s.pts[s.pts.length - 1]; x.fillStyle = s.color; x.textAlign = 'left'; x.textBaseline = 'middle';
+      x.font = 'bold 10px system-ui'; x.fillText(s.label, px(lp[0]) + 4, py(lp[1])); }
+    if (s.dots) { x.fillStyle = s.color; s.pts.forEach(function(p){ x.beginPath(); x.arc(px(p[0]), py(p[1]), 2.5, 0, 6.3); x.fill(); }); }
+  });
+}
+function drawCoTable(){
+  var tp = $('tp').querySelector('tbody'); tp.innerHTML = '';
+  $('t4').textContent = 'Étapes : pour chaque critère, les 4 candidats testés (mêmes parties pour tous)';
+  coHist.slice().reverse().slice(0, 15).forEach(function(st){
+    var tr = document.createElement('tr'), best = st.rates.indexOf(Math.max.apply(null, st.rates));
+    tr.innerHTML = '<td><b>' + st.name + '</b><br><span style="color:#b8a8d8">passe ' + (st.pass + 1) + '</span></td>' +
+      '<td colspan="4">' + st.cands.map(function(c, i){ var g = (i === st.chosen); return '<span style="display:inline-block;margin:2px 8px 2px 0;padding:2px 7px;border-radius:7px;background:' + (g ? '#7a52c9' : 'rgba(255,255,255,.08)') + '">' + (Math.round(c * 10) / 10) + ' → <b>' + pct(st.rates[i]) + '</b></span>'; }).join('') + '</td>' +
+      '<td class="n" style="color:' + (st.after !== st.before ? '#9ef0b6' : '#9a8cc0') + '">' + (st.after !== st.before ? 'changé' : 'gardé') + '</td>';
+    tp.appendChild(tr);
+  });
+}
+function drawAll(){
+  if (coHist.length) {
+    $('t1').textContent = 'Convergence : taux de victoire des poids en place, étape par étape (contre l\'IA actuelle)';
+    var sc = [], last = coHist.length;
+    if (base) sc.push({ color: '#ffffff', dash: [4, 4], w: 1, pts: [[0, 0.5], [last, 0.5]], label: '50%' });
+    var dots = []; coHist.forEach(function(st){ st.rates.forEach(function(r, i){ if (i !== st.chosen) dots.push([st.step + 1, r]); }); });
+    sc.push({ color: 'rgba(255,255,255,.35)', w: 0, dots: true, pts: dots, label: 'candidats écartés' });
+    if (coHist[0] && coHist[0].ratesRnd) sc.push({ color: '#9ef0b6', w: 1.5, pts: coHist.map(function(st){ return [st.step + 1, st.vsRnd]; }), label: 'vs aléatoire' });
+    sc.push({ color: '#ffe98a', dots: true, pts: coHist.map(function(st){ return [st.step + 1, st.vsCur]; }), label: 'vs actuelle' });
+    chart($('c1'), sc, { ymin: 0.3, ymax: 0.7, yfmt: function(v){ return Math.round(v * 100) + '%'; }, right: 110, xmax: Math.max(1, last), xlabel: 'étape (un critère testé)' });
+    $('leg1').innerHTML = 'Chaque étape teste 4 valeurs d\'un critère sur les mêmes parties. La ligne jaune est le taux des poids <b>en place</b> : elle ne peut que monter ou rester. ' + (base ? 'Repère : l\'IA actuelle fait ' + pct(base.curVsCurPlayerSide) + ' contre elle-même.' : '');
+    var s2 = [];
+    names.forEach(function(n, k){ s2.push({ color: COL(k), w: 1.5, label: n, pts: [[0, 0]].concat(coHist.map(function(st){ return [st.step + 1, Math.log2(Math.max(0.01, st.w[k] + 1) / (w0[k] + 1))]; })) }); });
+    chart($('c2'), s2, { right: 70, xmax: Math.max(1, last), yfmt: function(v){ return v.toFixed(1); }, xlabel: 'étape' });
+    return;
+  }
+  var s1 = [];
+  if (base) {
+    s1.push({ color: '#ffffff', dash: [4, 4], w: 1, pts: [[0, 0.5], [Math.max(1, hist.length), 0.5]] });
+    s1.push({ color: '#ff9e9e', dash: [4, 4], w: 1, pts: [[0, 1 - base.curVsRnd], [Math.max(1, hist.length), 1 - base.curVsRnd]], label: 'aléatoire vs actuelle' });
+  }
+  if (hist.length) {
+    s1.push({ color: '#7ec8ff', band: true, pts: hist.map(function(h){ return [h.gen, Math.min.apply(null, h.pop.map(function(p){ return p.vsCur; })), Math.max.apply(null, h.pop.map(function(p){ return p.vsCur; }))]; }) });
+    s1.push({ color: '#7ec8ff', w: 1.5, dash: [2, 3], pts: hist.map(function(h){ return [h.gen, h.pop.reduce(function(a, p){ return a + p.vsCur; }, 0) / h.pop.length]; }), label: 'moyenne pop.' });
+    s1.push({ color: '#ffe98a', dots: true, pts: hist.map(function(h){ return [h.gen, h.best.vsCur]; }), label: 'champion vs actuelle' });
+    s1.push({ color: '#9ef0b6', dots: true, pts: hist.map(function(h){ return [h.gen, h.best.vsRnd]; }), label: 'champion vs aléatoire' });
+    if (chk.length) s1.push({ color: '#ffffff', w: 3, dots: true, pts: chk, label: 'VÉRIFIÉ (frais)' });
+  }
+  chart($('c1'), s1, { ymin: 0, ymax: 1, yfmt: function(v){ return Math.round(v * 100) + '%'; }, right: 120, xmax: Math.max(1, hist.length) });
+  $('leg1').innerHTML = base ? 'Repères mesurés au démarrage : l\'IA actuelle bat l\'aléatoire à <b>' + pct(base.curVsRnd) + '</b>, et fait <b>' + pct(base.curVsCurPlayerSide) + '</b> contre elle-même côté joueur. La bande bleue = étendue de la population. <b>La ligne blanche est la seule à croire</b> : le champion du moment, rejoué toutes les 3 générations sur 400 parties fraîches. La jaune est sa moyenne d\'entraînement, gonflée par la sélection : le champion est le maximum de 10 mesures bruitées, donc presque toujours un chanceux, et sa moyenne fond vers son vrai niveau à mesure qu\'il accumule des parties. Ton pic à 85% était cette illusion.' : '';
+  var s2 = [];
+  if (hist.length && names.length) names.forEach(function(n, k){
+    s2.push({ color: COL(k), w: 1.5, label: n, pts: hist.map(function(h){ return [h.gen, Math.log2(Math.max(0.01, h.best.w[k] + 1) / (w0[k] + 1))]; }) });
+  });
+  chart($('c2'), s2, { right: 70, xmax: Math.max(1, hist.length), yfmt: function(v){ return v.toFixed(1); } });
+}
+function drawTables(h){
+  var tb = $('tw').querySelector('tbody'); tb.innerHTML = '';
+  names.forEach(function(n, k){
+    var a = w0[k], b = h.best.w[k], r = (Math.abs(a) > 0.5) ? b / a : null;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><span class="sw" style="background:' + COL(k) + '"></span></td><td><b>' + n + '</b></td><td style="color:#b8a8d8">' + (desc[n] || '') + '</td>' +
+      '<td class="n">' + a + '</td><td class="n"><b>' + (Math.round(b * 10) / 10) + '</b></td>' +
+      '<td class="n ' + (r === null ? '' : (r > 1.15 ? 'up' : (r < 0.87 ? 'down' : ''))) + '">' + (r === null ? '–' : ('×' + r.toFixed(2))) + '</td>';
+    tb.appendChild(tr);
+  });
+  var tp = $('tp').querySelector('tbody'); tp.innerHTML = '';
+  h.pop.forEach(function(p, i){
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + (i + 1) + (i < cfg().elites ? ' ★' : '') + '</td><td class="n">' + pct(p.fit) + '</td><td class="n"><b>' + pct(p.lcb) + '</b></td><td class="n">' + pct(p.vsCur) + '</td><td class="n">' + p.games + '</td><td class="n">' + p.born + '</td>';
+    tp.appendChild(tr);
+  });
+}
+function setStat(h){
+  $('sGen').textContent = h.gen; $('sPlayed').textContent = fmtN(h.played);
+  $('sCur').textContent = pct(h.best.vsCur); $('sRnd').textContent = pct(h.best.vsRnd); $('sG').textContent = h.best.games;
+}
+
+// ---------- messages du worker ----------
+function recoit(m){
+  if (m.type === 'ready') {
+    clearTimeout(bootT);
+    document.getElementById('boot').style.display = 'none';
+    $('etat').textContent = 'Moteur : ' + moteur + ', ' + m.boards + ' plateaux charges. Mesure des reperes...';
+    worker.postMessage({ type: 'config', cfg: cfg() });
+    worker.postMessage({ type: 'baseline', n: 200 });
+  }
+  if (m.type === 'baseline') { base = m.b; $('etat').textContent = 'Repères mesurés. Prêt (moteur : ' + moteur + ').'; drawAll(); }
+  if (m.type === 'progress') {
+    var now = Date.now(); if (running) { elapsed += now - lastTick; lastTick = now; }
+    if (lastProg) { var dg = m.played - lastProg.p, dt = (now - lastProg.t) / 1000; if (dt > 0.3) { rate = 0.7 * rate + 0.3 * (dg / dt); lastProg = { p: m.played, t: now }; } }
+    else lastProg = { p: m.played, t: now };
+    $('jauge').style.width = Math.min(100, m.played / m.target * 100) + '%';
+    $('compte').textContent = fmtN(m.played) + ' / ' + fmtN(m.target);
+    $('etat').textContent = m.coord
+      ? 'Passe ' + (m.gen + 1) + ', critère "' + m.coord.name + '", candidat ' + (m.coord.c + 1) + '/4 (' + m.coord.j + '/' + m.coord.n + ' parties)'
+      : 'Génération ' + m.gen + ', individu ' + (m.ind + 1) + ' / ' + m.pop.length;
+    $('vit').textContent = rate ? Math.round(rate) + ' parties/s, reste ~' + Math.max(0, Math.round((m.target - m.played) / rate)) + ' s' : '';
+    $('sT').textContent = Math.round(elapsed / 1000) + ' s';
+  }
+  if (m.type === 'coord') {
+    names = m.names; w0 = m.w0; desc = m.desc; var st = m.s;
+    coHist.push(st); champion = { w: st.w, vsCur: st.vsCur, vsRnd: st.vsRnd, games: st.n, fit: st.fit };
+    $('sGen').textContent = 'passe ' + (st.pass + 1) + ', étape ' + (st.step + 1); $('sPlayed').textContent = fmtN(st.played);
+    $('sCur').textContent = pct(st.vsCur); $('sRnd').textContent = pct(st.vsRnd); $('sG').textContent = st.nCur + '+' + (st.n - st.nCur) + ' / candidat';
+    $('sT').textContent = Math.round(elapsed / 1000) + ' s';
+    drawTables({ best: champion, pop: [] }); drawCoTable(); drawAll(); $('verif').disabled = false; $('exp').disabled = false;
+  }
+  if (m.type === 'checkpoint') { chk.push([m.gen, m.vsCur]); drawAll();
+    $('verifOut').innerHTML = 'Dernier point <b>vérifié</b> (parties fraîches) : génération ' + m.gen + ', <b>' + pct(m.vsCur) + '</b> sur ' + m.games + ' parties.'; }
+  if (m.type === 'generation') { names = m.names; w0 = m.w0; desc = m.desc; hist.push(m.s); champion = m.s.best; setStat(m.s); drawTables(m.s); drawAll(); $('sT').textContent = Math.round(elapsed / 1000) + ' s'; $('verif').disabled = false; $('exp').disabled = false; }
+  if (m.type === 'done') { running = false; $('etat').textContent = 'Terminé : ' + fmtN(m.s.played) + ' parties, ' + (m.s.gen + 1) + ' générations.'; $('go').textContent = 'Continuer'; $('go').disabled = false; $('pause').disabled = true; exportJson(); }
+  if (m.type === 'stopped') { running = false; $('go').textContent = 'Reprendre'; $('go').disabled = false; $('pause').disabled = true; $('etat').textContent = 'En pause.'; }
+  if (m.type === 'verified') { $('verifOut').innerHTML = 'Vérification sur <b>' + m.v.games + '</b> parties contre l\'IA actuelle, même bruit : le champion gagne <b>' + pct(m.v.vsCur) + '</b> (parties de ' + m.v.avgMoves.toFixed(0) + ' coups en moyenne).'; $('verif').disabled = false; $('etat').textContent = 'Vérification terminée.'; }
+  if (m.type === 'json') {
+    var o = { game: 'Unicorn vs Nightmares', generation: m.gen, gamesPlayed: m.played,
+      champion: champion ? { vsCurrent: +champion.vsCur.toFixed(3), vsRandom: +champion.vsRnd.toFixed(3), gamesEvaluated: champion.games } : null,
+      weights: {}, original: {}, asArray: m.best.map(function(v){ return Math.round(v * 100) / 100; }), order: m.names.join(','),
+      settings: cfg(), history: m.history.map(function(h){ return { gen: h.gen, vsCurrent: +h.best.vsCur.toFixed(3), vsRandom: +h.best.vsRnd.toFixed(3), mean: +h.mean.toFixed(3) }; }) };
+    m.names.forEach(function(n, k){ o.weights[n] = Math.round(m.best[k] * 100) / 100; o.original[n] = m.w0[k]; });
+    $('json').value = JSON.stringify(o, null, 2);
+  }
+}
+function exportJson(){ worker.postMessage({ type: 'export' }); }
+
+// ---------- boutons ----------
+$('go').onclick = function(){
+  var reset = !hist.length && !coHist.length && !running && $('go').textContent === 'Démarrer';
+  worker.postMessage({ type: 'config', cfg: cfg() });
+  worker.postMessage({ type: 'start', reset: reset, target: cfg().target, keepTime: elapsed });
+  running = true; lastTick = Date.now(); lastProg = null; $('go').disabled = true; $('pause').disabled = false; $('etat').textContent = 'Entraînement...';
+};
+$('pause').onclick = function(){ worker.postMessage({ type: 'stop' }); };
+$('reset').onclick = function(){ location.reload(); };
+$('verif').onclick = function(){ if (!champion) return; $('verif').disabled = true; $('etat').textContent = 'Vérification du champion...'; worker.postMessage({ type: 'verify', w: champion.w, n: 600 }); };
+$('exp').onclick = exportJson;
+$('copy').onclick = function(){ $('json').select(); document.execCommand('copy'); $('copy').textContent = 'Copié !'; setTimeout(function(){ $('copy').textContent = 'Copier'; }, 1200); };
+$('dl').onclick = function(){ var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('json').value], { type: 'application/json' })); a.download = 'poids-ia-unicorn.json'; a.click(); };
+$('preset').onchange = function(){
+  var P = { rapide: ['coord', { passes: 1, perCand: 160 }], serieux: ['coord', { passes: 1, perCand: 500 }],
+            long: ['coord', { passes: 2, perCand: 800 }], ga10: ['ga', { gens: 10, pop: 10, perInd: 100, el: 3 }],
+            ga60: ['ga', { gens: 30, pop: 8, perInd: 250, el: 2 }] }[this.value];
+  if (P) { $('algo').value = P[0]; for (var k in P[1]) $(k).value = P[1][k]; majMode(); }
+};
+['algo', 'passes', 'perCand', 'gens', 'pop', 'perInd'].forEach(function(id){
+  $(id).onchange = id === 'algo' ? majMode : majTotal; $(id).oninput = majTotal; });
+window.addEventListener('resize', drawAll);
+
+// au chargement : le moteur demarre, sa poignee de main declenchera config + reperes
+majMode();
+demarreMoteur();
+drawAll();
+</script></body></html>

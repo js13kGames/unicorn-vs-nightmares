@@ -1,0 +1,72 @@
+{
+  "game": "Unicorn vs Nightmares",
+  "date": "2026-09-01",
+  "sources": [
+    "session genetique 300 000 parties",
+    "session genetique 500 000 parties, tous niveaux"
+  ],
+  "championsAnnonces": {
+    "300k": 0.62,
+    "500k": 0.63,
+    "gamesEvaluated": 200,
+    "note": "gonfles par la malediction du vainqueur"
+  },
+  "championsVerifies": {
+    "300k_nettoye": 0.574,
+    "500k_brut": 0.563,
+    "games": 8000
+  },
+  "analyse": {
+    "consensusDes4PoidsCommuns": 0.51,
+    "origineDuGain": "baisser les poids des etoiles (starVal 34->6, steal 26->8) donne 55.5 des 56.6 points",
+    "positionSeule": 0.525,
+    "lecon": "les poids ne s additionnent pas, seul leur rapport compte"
+  },
+  "APPLIQUE": {
+    "starVal": "34 -> 6",
+    "steal": "26 -> 8",
+    "cover": "22 -> 50",
+    "approach": "18 -> 32",
+    "replay": "36 -> 75",
+    "inchanges": "castle 5000, starWin 3000, breakWin 4000, intruder 2500, draw 8, purple 14",
+    "gainVerifie": 0.56,
+    "games": 8000,
+    "parNiveau": {
+      "1": 0.52,
+      "2": 0.563,
+      "3": 0.56,
+      "5": 0.563,
+      "8": 0.568,
+      "11": 0.568
+    }
+  },
+  "effetSurLeJeu": {
+    "victoiresParChateau": "78% -> 83%",
+    "victoiresParEtoiles": "22% -> 17%",
+    "volsDEtoilesParPartie": "5.8 -> 5.4",
+    "longueur": "10.7 -> 10.2 coups",
+    "progressionDeSerie": {
+      "avant": "95/85/77/51",
+      "apres": "95/73/64/56"
+    }
+  },
+  "optimumVerifie": "aucune variation isolee ne bat la nouvelle IA de plus que la marge de bruit",
+  "asArray": [
+    5000,
+    3000,
+    4000,
+    6,
+    8,
+    50,
+    32,
+    75,
+    8,
+    14,
+    0,
+    2500,
+    0,
+    0,
+    0
+  ],
+  "order": "castle,starWin,breakWin,starVal,steal,cover,approach,replay,draw,purple,neighbor,intruder,holdGate,gateLost,cutStars"
+}

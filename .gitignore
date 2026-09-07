@@ -1,0 +1,44 @@
+# --- Dependances ---
+node_modules/
+
+# Le lockfile DOIT etre versionne : il fige les versions de terser et roadroller,
+# donc la taille du zip est reproductible pour qui clone le depot.
+!package-lock.json
+
+# --- Sortie de build (regeneree par `npm run build`) ---
+dist/
+*.zip
+
+# --- Sorties regenerables ---
+lab/labo-entrainement.html
+
+# --- macOS ---
+# .DS_Store et ._* sont la cause des dossiers __MACOSX parasites dans les zips
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# --- Windows / Linux ---
+Thumbs.db
+desktop.ini
+.directory
+
+# --- Editeurs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Logs et caches npm ---
+*.log
+npm-debug.log*
+.npm/
+.eslintcache
+
+# --- Sorties du skill js13k-finalize ---
+.js13k-check/

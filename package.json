@@ -1,0 +1,21 @@
+{
+  "name": "unicorn-vs-nightmares",
+  "version": "1.0.0",
+  "description": "A tile-placing game where a unicorn defends a child's dream. Made for js13kGames 2026 (theme: Unicorns and Rainbows).",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "build:dev": "bash scripts/build.sh --no-rr",
+    "build:lab": "node scripts/build-lab.js",
+    "test": "node tests/test.js",
+    "gif": "node scripts/record-gif.mjs"
+  },
+  "devDependencies": {
+    "roadroller": "^2.1.0",
+    "terser": "^5.31.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
